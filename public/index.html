@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link href="css/style.css" rel="stylesheet">
+
+    <title>Tchat.IO</title>
+
+</head>
+
+
+<body ng-app="tchatApp" class="container" ng-controller="TchatController as tchat">
+
+
+<div ng-show="tchat.isDisconnected">
+    <div>
+        <h3>Choisissez un pseudo pour rejoindre le tchat :</h3>
+        <form class="form-inline" name="loginForm" ng-submit="tchat.loginUser()">
+            <input type="text" class="form-control" placeholder="Votre pseudo ..." required ng-model="tchat.pseudo">
+            <input type="submit" class="btn btn-primary" value="Rejoindre">
+        </form>
+    </div>
+
+</div>
+
+<div ng-hide="tchat.isDisconnected">
+
+    <div>
+        <main class="col-md-9">
+            <div class="well well-sm">
+                <div><strong>pseudo</strong> &gt; message</div>
+                <div><strong>pseudo</strong> &gt; message</div>
+                <div><strong>pseudo</strong> &gt; message</div>
+            </div>
+
+            <form class="form-inline">
+                <p><em>(Connecté en tant que <strong>pseudo</strong>)</em></p>
+                <input type="text" class="form-control" placeholder="Votre message ..." size="50">
+                <input type="submit" class="btn btn-primary" value="Envoyer">
+            </form>
+        </main>
+
+        <aside class="col-md-3">
+            <h4>Membres connectés</h4>
+            <ul>
+                <!-- user et pas tchat.user car ici user est un element de la boucle for in tchat.users -->
+                <!-- On compare l'id avec celle de socket de l'user -->
+                <li ng-repeat="user in tchat.users">{{user.pseudo}}<span
+                        ng-show="user.id == tchat.socket.id">(vous)</span></li>
+            </ul>
+        </aside>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/index.js"></script>
+<script>
+
+
+    angular.module('tchatApp', [])
+        .controller('TchatController', ['$scope', function ($scope) {
+            var tchat = this; //pour faire un lien entre une vue / controller ici cela correspond à l'alias
+
+            tchat.isDisconnected = true; //show what form
+
+            tchat.users = []; // Liste des utilisateurs
+            tchat.pseudo = ""; //input
+
+            tchat.loginUser = function () {
+                tchat.isDisconnected = false;
+
+                tchat.socket = io('ws://localhost:8000'); //var socket = io('ws://localhost:myPort');
+                //envoi au server le pseudo entrée
+                tchat.socket.emit('setPseudo', tchat.pseudo);
+
+
+                //objectif
+                /* On écoutera ensuite du serveur chaque événement suivant :
+                 1) 'usersList' : Envoi de la liste initiale des utilisateurs connectés
+                 2) 'newUser' : Un nouvel utilisateur est arrivé sur le tchat
+                 3) 'userDisconnected' : Un utilisateur s'est déconnecté du tchat
+                 4) 'message' : Ecoute les nouveaux messages provenants du serveur
+                 */
+
+                //1)
+                tchat.socket.on('usersList', function (userslist) {
+                    tchat.users = userslist; //QUand nous on arrive
+                    $scope.$apply(); // permet de forcer le reset de la vue pour voir les données; attention il faut injecter scope
+                    //apply recharge le traitement pour trouer les changement et procédé à l'affichage
+                });
+
+                //2)
+                tchat.socket.on('newUser', function (newUser) {
+                    tchat.users.push(newUser);  //quand d'autre arrive
+                    $scope.$apply();
+                });
+
+            };
+
+
+        }]);
+
+</script>
+
+</body>
+</html>

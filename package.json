@@ -1,0 +1,21 @@
+{
+  "name": "suptchat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "express": "^4.15.3"
+  },
+  "dependencies": {
+    "angular": "^1.6.4",
+    "bootstrap": "^3.3.7",
+    "node-twig": "^1.1.0",
+    "socket.io": "^2.0.3",
+    "twig": "^1.10.5"
+  }
+}
